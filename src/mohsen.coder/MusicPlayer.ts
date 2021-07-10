@@ -8,7 +8,8 @@ export class MusicPlayer {
         type: string, 
         showMusicList: boolean, 
         autoGoToNextMusic: boolean,
-        likeFunction?: () => {} 
+        onLikeFunction?: () => {},
+        onDislikeFunction?: () => {} 
     } = {
         type: "block", 
         showMusicList: true,
@@ -39,7 +40,9 @@ export class MusicPlayer {
                 wrapElemenClassName, 
                 mappedMusicList, 
                 this.options.showMusicList, 
-                this.options.autoGoToNextMusic
+                this.options.autoGoToNextMusic,
+                this.options.onLikeFunction,
+                this.options.onDislikeFunction,
                 );
             this.musicPlayer.initialize()
         }
