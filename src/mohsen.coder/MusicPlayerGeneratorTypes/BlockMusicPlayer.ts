@@ -1,4 +1,3 @@
-import { BooleanLiteral } from "typescript";
 import { Music } from "../Music";
 
 export class BlockMusicPlayer {
@@ -25,6 +24,8 @@ export class BlockMusicPlayer {
     private audioPlayer!: HTMLAudioElement;
 
     private musicList: Array<Music> = [];
+    private shuffleMusicList: Array<Music> = [];
+    private isShuffle: boolean = false;
     private currentTime: number = 0;
     private isPlay: boolean = false
     private timer: NodeJS.Timer | null = null;
@@ -119,10 +120,12 @@ export class BlockMusicPlayer {
         this.shuffleButton = document.createElement('div')
         this.shuffleButton.classList.add('rw__music-player__control-buttons__shuffel-btn')
         this.shuffleButton.innerHTML = `<button><i class="fas fa-random"></i></button>`
+        this.shuffleButton.addEventListener('click', this.shuffleMusicListFunc)
 
         this.repeatButton = document.createElement('div')
         this.repeatButton.classList.add('rw__music-player__control-buttons__repeat-btn')
         this.repeatButton.innerHTML = `<button><i class="fas fa-retweet"></i></button>`
+        this.repeatButton.addEventListener('click', this.repeatMusicFunc)
 
         this.likeButton = document.createElement('div')
         this.likeButton.classList.add('rw__music-player__control-buttons__like-btn')
@@ -271,6 +274,8 @@ export class BlockMusicPlayer {
                 }
                 this.currentTime++;
             } else if (this.loopIsOn) {
+                // console.log('we are here');
+                this.currentTime = 0;
                 this.clearTimerToCountUpToDuration();
                 this.setTimerToCountUpToDuration();
             } else {
@@ -288,7 +293,7 @@ export class BlockMusicPlayer {
         if (this.audioPlayer && this.currentTime === 0) {
             this.audioPlayer.src = this.currentMusic.getSrc()
             this.audioPlayer.play();
-        }else{
+        } else {
             this.audioPlayer.play();
             this.setTimerToCountUpToDuration();
         }
@@ -297,7 +302,7 @@ export class BlockMusicPlayer {
     }
 
     private showPauseButton = (status: boolean) => {
-        if(status){
+        if (status) {
             this.playButton.style.display = 'none'
             this.pauseButton.style.display = 'inline-block'
             return;
@@ -350,6 +355,9 @@ export class BlockMusicPlayer {
     }
 
     private findMusicIndexById(id: string | null): number {
+        if (this.isShuffle) {
+            return id ? this.shuffleMusicList.findIndex((music: Music) => music.getId() === id) : 0
+        }
         return id ? this.musicList.findIndex((music: Music) => music.getId() === id) : 0
     }
     private findNextMusicIndex = (currentMusic: Music): number => {
@@ -385,7 +393,7 @@ export class BlockMusicPlayer {
     private goToNextMusic = (): void => {
         this.resetMusicPlayer();
         const nextMusicIndex = this.findNextMusicIndex(this.currentMusic);
-        this.currentMusic = this.musicList[nextMusicIndex];
+        this.currentMusic = this.isShuffle ? this.shuffleMusicList[nextMusicIndex] : this.musicList[nextMusicIndex];
         this.setMusicInfoToMusicPlayer();
         this.playMusic()
     }
@@ -393,13 +401,63 @@ export class BlockMusicPlayer {
     private goToPreviousMusic = (): void => {
         this.resetMusicPlayer();
         const previousMusicIndex = this.findPreviousMusicIndex(this.currentMusic);
-        this.currentMusic = this.musicList[previousMusicIndex];
+        this.currentMusic = this.isShuffle ? this.shuffleMusicList[previousMusicIndex] : this.musicList[previousMusicIndex];
         this.setMusicInfoToMusicPlayer();
         this.playMusic()
     }
 
     private preLoadMusic = (event: Event) => {
-        this.currentMusic.setDuration(this.audioPlayer.duration)
+        this.currentMusic.setDuration(this.audioPlayer.duration-2.5)
         this.setTimerToCountUpToDuration();
+    }
+
+    private shuffle(array: Array<any>) {
+        let newArray = [...array];
+        let currentIndex = array.length, randomIndex;
+
+        while (0 !== currentIndex) {
+            randomIndex = Math.floor(Math.random() * currentIndex);
+            currentIndex--;
+
+            [newArray[currentIndex], newArray[randomIndex]] = [
+                newArray[randomIndex], newArray[currentIndex]];
+        }
+        return newArray;
+    }
+
+    private shuffleMusicListFunc = (event: MouseEvent): void => {
+        const target = (event.target as HTMLElement);
+        let element: HTMLElement;
+
+        if (!(target.nodeName === "I" && target.parentElement)) return;
+        element = target.parentElement;
+
+        if (!this.isShuffle) {
+            this.isShuffle = true
+            this.shuffleMusicList = this.shuffle(this.musicList);
+            element.classList.add('active');
+            return;
+        }
+
+        this.isShuffle = false;
+        element.classList.remove('active');
+    }
+
+    private repeatMusicFunc = (event: MouseEvent): void => {
+        const target = event.target as HTMLElement;
+        let element: HTMLElement;
+        if (!(target.nodeName === 'I' && target.parentElement)) return;
+        element = target.parentElement;
+
+        if (!this.loopIsOn) {
+            this.loopIsOn = true;
+            this.audioPlayer.loop = true;
+            element.classList.add('active')
+            return;
+        }
+
+        this.loopIsOn = false;
+        this.audioPlayer.loop = false;
+        element.classList.remove('active');
     }
 }
