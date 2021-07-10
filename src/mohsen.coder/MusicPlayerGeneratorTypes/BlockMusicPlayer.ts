@@ -33,12 +33,24 @@ export class BlockMusicPlayer {
     private loopIsOn: boolean = false;
     private currentMusic!: Music;
     private showMusicList: boolean = false;
+    private onLikeFunction?: () => {};
+    private onDislikeFunction?: () => {};
 
-    constructor(wrapClassName: string, musicList: Array<Music>, showMusicListStatus: boolean, autoGoToNextMusic: boolean) {
+    constructor(
+        wrapClassName: string,
+        musicList: Array<Music>,
+        showMusicListStatus: boolean,
+        autoGoToNextMusic: boolean,
+        onLikeFunction?: () => {},
+        onDislikeFunction?: () => {}
+    ) {
         this.musicList = musicList;
         this.currentMusic = this.musicList[0]
         this.showMusicList = showMusicListStatus;
         this.wrapElemnt = document.querySelector(wrapClassName);
+        if (onLikeFunction) this.onLikeFunction = onLikeFunction;
+        if (onDislikeFunction) this.onDislikeFunction = onDislikeFunction;
+
     }
 
     public initialize(): void {
@@ -130,6 +142,7 @@ export class BlockMusicPlayer {
         this.likeButton = document.createElement('div')
         this.likeButton.classList.add('rw__music-player__control-buttons__like-btn')
         this.likeButton.innerHTML = `<button><i class="far fa-heart"></i></button>`
+        this.likeButton.addEventListener('click', this.clickOnLikeButton)
 
         this.controlButtonsTwo.appendChild(this.shuffleButton)
         this.controlButtonsTwo.appendChild(this.repeatButton)
@@ -407,7 +420,7 @@ export class BlockMusicPlayer {
     }
 
     private preLoadMusic = (event: Event) => {
-        this.currentMusic.setDuration(this.audioPlayer.duration-2.5)
+        this.currentMusic.setDuration(this.audioPlayer.duration - 2.5)
         this.setTimerToCountUpToDuration();
     }
 
@@ -459,5 +472,24 @@ export class BlockMusicPlayer {
         this.loopIsOn = false;
         this.audioPlayer.loop = false;
         element.classList.remove('active');
+    }
+
+    private clickOnLikeButton = (event: MouseEvent): void => {
+        const target = event.target as HTMLElement;
+        let element: HTMLElement;
+        if (!(target.nodeName === 'I' && target.parentElement)) return;
+        element = target.parentElement;
+        
+        if (!this.currentMusic.getLike()) {
+            this.currentMusic.setLike(true)
+            element.classList.add('active')
+            if (this.onLikeFunction) this.onLikeFunction()
+            return;
+        }
+
+        this.currentMusic.setLike(false);
+        element.classList.remove('active')
+        if (this.onDislikeFunction) this.onDislikeFunction();
+
     }
 }
