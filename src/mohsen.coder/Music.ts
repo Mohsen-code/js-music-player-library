@@ -7,6 +7,7 @@ export class Music {
     private src: string = "";
     private posterUrl: string = "";
     private duration: number = 0;
+    private liked: boolean = false;
 
     constructor(data?: object) {
         if (data) Object.assign(this, data);
@@ -32,6 +33,10 @@ export class Music {
         this.duration = duration;
     }
 
+    public setLike(isLike: boolean): void {
+        this.liked = isLike
+    }
+
     public getId(): string {
         return this.id;
     }
@@ -54,5 +59,9 @@ export class Music {
 
     public getDuration(): number {
         return this.duration;
+    }
+    
+    public getLike(): boolean {
+        return this.liked;
     }
 }
